@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="lt">
+<head>
+    <meta charset="UTF-8">
+    <title>Saugumo patikra</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="photos/heart.png">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .intro {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #202124;
+        }
+
+        .intro h1 {
+            font-size: 24px;
+            font-weight: 400;
+            margin: 0 0 8px 0;
+            color: #202124;
+        }
+
+        .intro p {
+            font-size: 14px;
+            color: #5f6368;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .card {
+            background: #fff;
+            width: 340px;
+            padding: 20px;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,.1);
+            text-align: center;
+        }
+
+        .recaptcha {
+            border: 2px solid #dadce0;
+            border-radius: 4px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            background: #fff;
+            transition: border-color 0.2s;
+        }
+
+        .recaptcha:hover {
+            border-color: #4285f4;
+        }
+
+        .recaptcha-logo {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .recaptcha input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            margin: 0;
+            flex-shrink: 0;
+        }
+
+        .recaptcha-text {
+            font-family: 'Roboto', Arial, sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            color: #202124;
+            letter-spacing: 0.2px;
+            flex: 1;
+            text-align: left;
+        }
+
+        .small {
+            font-size: 10px;
+            color: #70757a;
+            margin-top: 8px;
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+
+        #loading, #challenge, #result, #error {
+            display: none;
+        }
+
+
+        #error {
+            color: #d93025;
+            margin-top: 15px;
+            font-size: 14px;
+            padding: 10px;
+            background: #fce8e6;
+            border-radius: 4px;
+        }
+
+        .spinner {
+            margin: 20px auto;
+            width: 30px;
+            height: 30px;
+            border: 4px solid #ddd;
+            border-top: 4px solid #4285f4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .grid img {
+            width: 100%;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+
+        .grid img.selected {
+            border-color: #4285f4;
+        }
+
+        button {
+            margin-top: 15px;
+            padding: 10px 16px;
+            border: none;
+            background: #4285f4;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .heart {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="intro" id="intro">
+    <h1>Saugumo patikra</h1>
+    <p>Norėdami tęsti, turime patvirtinti, kad esate žmogus, o ne automatinė programa. Prašome užpildyti žemiau pateiktą saugumo patikrą.</p>
+</div>
+
+<div class="card" id="step1">
+    <div class="recaptcha" id="recaptcha">
+        <img src="photos/recaptcha-logo.png" alt="reCAPTCHA" class="recaptcha-logo">
+        <input type="checkbox">
+        <span class="recaptcha-text">Aš ne robotas</span>
+    </div>
+    <div class="small">Apsaugota reCAPTCHA</div>
+</div>
+
+<div class="card" id="loading">
+    <div class="spinner"></div>
+    <p>Tikrinama žmogiškumas…</p>
+</div>
+
+<div class="card" id="challenge">
+    <h3>Pasirinkite visas nuotraukas, kuriose yra<br><strong>mano vyras</strong></h3>
+    <div class="grid">
+        <img src="photos/me1.jpeg">
+        <img src="photos/me2.jpeg">
+        <img src="photos/me3.jpeg">
+        <img src="photos/me4.jpeg">
+        <img src="photos/me1.jpeg">
+        <img src="photos/me2.jpeg">
+    </div>
+    <div id="error">Žmona turėtų žinoti kaip atrodo jos vyras</div>
+    <button id="verifyBtn">Patvirtinti</button>
+</div>
+
+<div class="card" id="result">
+    <div class="heart">❤️</div>
+    <h2>Patvirtinimas sėkmingas</h2>
+    <p>Jūs oficialiai pakviesta į<br><strong>Valentino dienos pasimatymą</strong></p>
+    <p>
+        🕯️ <strong>Šį šeštadienį</strong><br>
+        🕖 <strong>19:00</strong><br>
+        🍷 <strong>Aš + Tu</strong><br>
+        🍽️ <strong>Pepper Grey</strong>
+    </p>
+</div>
+
+<script>
+    const recaptcha = document.getElementById('recaptcha');
+    const step1 = document.getElementById('step1');
+    const loading = document.getElementById('loading');
+    const challenge = document.getElementById('challenge');
+    const result = document.getElementById('result');
+    const intro = document.getElementById('intro');
+
+    recaptcha.addEventListener('click', () => {
+        step1.style.display = 'none';
+        intro.style.display = 'none';
+        loading.style.display = 'block';
+
+        setTimeout(() => {
+            loading.style.display = 'none';
+            challenge.style.display = 'block';
+        }, 1500);
+    });
+
+    document.querySelectorAll('.grid img').forEach(img => {
+        img.addEventListener('click', () => {
+            img.classList.toggle('selected');
+        });
+    });
+
+    document.getElementById('verifyBtn').addEventListener('click', () => {
+        const images = document.querySelectorAll('.grid img');
+        const selectedImages = document.querySelectorAll('.grid img.selected');
+        
+        if (selectedImages.length !== images.length) {
+            document.getElementById('error').style.display = 'block';
+        } else {
+            document.getElementById('error').style.display = 'none';
+            challenge.style.display = 'none';
+            intro.style.display = 'none';
+            result.style.display = 'block';
+        }
+    });
+</script>
+
+</body>
+</html>
