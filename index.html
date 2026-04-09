@@ -2,247 +2,777 @@
 <html lang="lt">
 <head>
     <meta charset="UTF-8">
-    <title>Saugumo patikra</title>
+    <title>Asmeninis kvietimas</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/png" href="photos/heart.png">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --pink: #c75b6e;
+            --pink-dark: #a84458;
+            --blue-cap: #4a90d9;
+            --blue-dark: #3a7fc8;
+            --green: #4caf50;
+            --text: #202124;
+            --sub: #5f6368;
+            --border: #dadce0;
+        }
+
         body {
-            font-family: 'Roboto', Arial, sans-serif;
-            background: #f5f5f5;
+            font-family: 'DM Sans', sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
+            justify-content: center;
+            padding: 40px 16px;
+            gap: 18px;
         }
 
-        .intro {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #202124;
-        }
-
-        .intro h1 {
-            font-size: 24px;
-            font-weight: 400;
-            margin: 0 0 8px 0;
-            color: #202124;
-        }
-
-        .intro p {
-            font-size: 14px;
-            color: #5f6368;
-            margin: 0;
-            line-height: 1.5;
-        }
-
-        .card {
+        /* ── Gate card ── */
+        .invite-gate {
+            width: 100%;
+            max-width: 340px;
             background: #fff;
-            width: 340px;
-            padding: 20px;
-            border-radius: 6px;
-            box-shadow: 0 4px 10px rgba(0,0,0,.1);
+            border-radius: 10px;
+            box-shadow: 0 2px 14px rgba(0,0,0,.09), 0 0 0 1px rgba(0,0,0,.05);
+            padding: 30px 26px 26px;
             text-align: center;
+            transition: transform 0.35s ease, opacity 0.35s ease, max-height 0.5s ease;
+            overflow: hidden;
         }
 
-        .recaptcha {
-            border: 2px solid #dadce0;
+        .invite-gate.hiding {
+            opacity: 0;
+            transform: translateY(-12px) scale(0.97);
+            max-height: 0;
+            padding: 0;
+            margin: 0;
+            pointer-events: none;
+        }
+
+        .invite-gate-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--pink);
+            background: #fce8eb;
+            padding: 3px 9px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+        }
+
+        .invite-gate h1 {
+            font-size: 21px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+            margin-bottom: 10px;
+        }
+
+        .invite-gate p {
+            font-size: 14px;
+            color: var(--sub);
+            line-height: 1.6;
+            margin-bottom: 22px;
+        }
+
+        .invite-open-btn {
+            width: 100%;
+            padding: 13px 20px;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            background: var(--pink);
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: background 0.18s, transform 0.1s, box-shadow 0.18s;
+            box-shadow: 0 2px 8px rgba(199,91,110,.3);
+        }
+
+        .invite-open-btn:hover { background: var(--pink-dark); box-shadow: 0 4px 14px rgba(199,91,110,.38); }
+        .invite-open-btn:active { transform: scale(0.98); }
+        .invite-open-btn:disabled { opacity: 0.6; cursor: default; box-shadow: none; }
+
+        /* ── Captcha flow ── */
+        #captchaFlow {
+            display: none;
+            width: 100%;
+            max-width: 340px;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        #captchaFlow.is-visible { display: flex; }
+
+        /* ── Step 1 widget ── */
+        .rc-widget {
+            width: 100%;
+            max-width: 310px;
+            height: 74px;
+            background: #f9f9f9;
+            border: 1px solid #d3d3d3;
             border-radius: 4px;
-            padding: 8px 12px;
+            box-shadow: 0 0 4px 1px rgba(0,0,0,.08);
             display: flex;
             align-items: center;
-            gap: 8px;
+            padding: 0 14px;
             cursor: pointer;
+            user-select: none;
+            gap: 14px;
+        }
+
+        .rc-checkbox-inner {
+            width: 28px;
+            height: 28px;
+            border: 2px solid #c1c1c1;
+            border-radius: 3px;
             background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
             transition: border-color 0.2s;
         }
 
-        .recaptcha:hover {
-            border-color: #4285f4;
+        .rc-checkbox-inner svg.check-svg { display: none; }
+        .rc-checkbox-inner.checked { border-color: var(--green); }
+        .rc-checkbox-inner.checked svg.check-svg { display: block; }
+        .rc-checkbox-inner.loading { border-color: transparent; }
+
+        .rc-spinner {
+            display: none;
+            width: 22px; height: 22px;
+            border: 3px solid #e0e0e0;
+            border-top-color: #4285f4;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            position: absolute;
         }
 
-        .recaptcha-logo {
-            width: 24px;
-            height: 24px;
-            flex-shrink: 0;
+        .rc-checkbox-inner.loading .rc-spinner { display: block; }
+
+        .rc-label { flex: 1; font-size: 14px; color: #333; font-weight: 400; }
+
+        .rc-logo { display: flex; flex-direction: column; align-items: center; gap: 2px; flex-shrink: 0; }
+        .rc-logo svg { width: 32px; height: 32px; }
+        .rc-logo-text { font-size: 8px; color: #666; text-align: center; line-height: 1.4; letter-spacing: 0.03em; font-family: Arial, sans-serif; }
+
+        /* ── Challenge ── */
+        .rc-challenge {
+            display: none;
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.25), 0 0 0 1px rgba(0,0,0,.07);
+            width: 100%;
+            max-width: 310px;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
         }
 
-        .recaptcha input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
+        .rc-challenge-header {
+            background: var(--blue-cap);
+            padding: 11px 16px;
+            color: #fff;
+        }
+
+        .rc-challenge-header p { font-size: 12px; line-height: 1.5; }
+        .rc-challenge-header p strong { font-size: 13px; font-weight: 700; display: block; margin-bottom: 1px; }
+
+        /* Grid */
+        .rc-image-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            padding: 3px;
+            background: #ccc;
+        }
+
+        .rc-tile {
+            position: relative;
+            aspect-ratio: 1;
             cursor: pointer;
-            margin: 0;
-            flex-shrink: 0;
+            overflow: hidden;
+            background: #e8e8e8;
         }
 
-        .recaptcha-text {
-            font-family: 'Roboto', Arial, sans-serif;
+        .rc-tile img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+            transition: opacity 0.18s;
+        }
+
+        .rc-tile img.shuffling { opacity: 0; }
+
+        .rc-tile::after {
+            content: '';
+            position: absolute; inset: 0;
+            background: rgba(0, 90, 200, 0.35);
+            opacity: 0;
+            transition: opacity 0.1s;
+            pointer-events: none;
+        }
+
+        .rc-tile.selected::after { opacity: 1; }
+
+        .rc-tile .tile-check {
+            position: absolute; bottom: 5px; right: 5px;
+            width: 20px; height: 20px;
+            background: #1a73e8;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: opacity 0.12s, transform 0.12s;
+            pointer-events: none;
+        }
+
+        .rc-tile.selected .tile-check { opacity: 1; transform: scale(1); }
+
+        /* Overlay spinner for verifying */
+        .rc-verifying-overlay {
+            display: none;
+            position: absolute; inset: 0;
+            background: rgba(255,255,255,.78);
+            align-items: center; justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            color: #444;
+            z-index: 10;
+        }
+
+        .rc-verifying-overlay.active { display: flex; }
+
+        .big-spinner {
+            width: 36px; height: 36px;
+            border: 4px solid #ddd;
+            border-top-color: var(--blue-cap);
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+
+        .rc-error {
+            display: none;
+            font-size: 12px;
+            color: #c0392b;
+            padding: 7px 12px;
+            background: #fdecea;
+            border-top: 1px solid #f5c6c2;
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+
+        /* Footer */
+        .rc-challenge-footer {
+            display: flex;
+            align-items: center;
+            padding: 7px 8px 7px 10px;
+            gap: 4px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .rc-footer-brand { display: flex; flex-direction: column; flex: 1; padding-left: 6px; }
+        .rc-footer-brand span:first-child { font-size: 10px; font-weight: 700; color: #555; letter-spacing: 0.04em; }
+        .rc-footer-brand span:last-child { font-size: 8px; color: #aaa; }
+
+        .rc-footer-actions { display: flex; gap: 2px; }
+
+        .rc-icon-btn {
+            width: 30px; height: 30px;
+            border: none; background: none; cursor: pointer;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            color: #666;
+            transition: background 0.15s;
+        }
+
+        .rc-icon-btn:hover { background: #f0f0f0; }
+        .rc-icon-btn.spinning svg { animation: spin 0.5s ease; }
+
+        .rc-verify-btn {
+            padding: 0 15px;
+            height: 34px;
+            background: var(--blue-cap);
+            color: #fff;
+            border: none;
+            border-radius: 3px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: Arial, sans-serif;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background 0.18s;
+        }
+
+        .rc-verify-btn:hover { background: var(--blue-dark); }
+
+        /* Round counter */
+        .rc-round-label {
+            font-size: 10px;
+            color: #999;
+            text-align: center;
+            padding: 5px 0 2px;
+            font-family: Arial, sans-serif;
+            letter-spacing: 0.04em;
+        }
+
+        /* Fake token */
+        .rc-token {
+            display: none;
+            font-size: 9px;
+            color: #bbb;
+            font-family: monospace;
+            text-align: center;
+            padding: 4px 8px 6px;
+            letter-spacing: 0.02em;
+            word-break: break-all;
+            background: #fafafa;
+            border-top: 1px solid #eee;
+        }
+
+        /* ── Result ── */
+        .rc-result {
+            display: none;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 3px 18px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.05);
+            width: 100%;
+            max-width: 340px;
+            overflow: hidden;
+            font-family: 'DM Sans', sans-serif;
+            text-align: center;
+        }
+
+        .rc-result-header {
+            background: linear-gradient(135deg, var(--pink) 0%, #e07a5f 100%);
+            padding: 14px 20px;
+            color: #fff;
             font-size: 14px;
-            font-weight: 500;
-            color: #202124;
-            letter-spacing: 0.2px;
-            flex: 1;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+        }
+
+        .rc-result-body { padding: 26px 24px 28px; }
+
+        .rc-result-check {
+            width: 56px; height: 56px;
+            background: var(--green);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px;
+            box-shadow: 0 4px 14px rgba(76,175,80,.35);
+            animation: popIn 0.4s cubic-bezier(.175,.885,.32,1.275) both;
+        }
+
+        .rc-result-body h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 4px;
+        }
+
+        .rc-subtitle { font-size: 13px; color: var(--sub); margin-bottom: 14px; }
+        .heart-center { display: block; text-align: center; margin-top: 4px; }
+
+        .ticket-image {
+            width: 100%;
+            border-radius: 10px;
+            margin-bottom: 18px;
+            border: 1px solid #eceff1;
+            box-shadow: 0 4px 14px rgba(0,0,0,.08);
+            object-fit: cover;
+        }
+
+        .invite-rows {
+            border: 1px solid #e8eaed;
+            border-radius: 8px;
+            overflow: hidden;
             text-align: left;
         }
 
-        .small {
-            font-size: 10px;
-            color: #70757a;
-            margin-top: 8px;
-            font-family: 'Roboto', Arial, sans-serif;
+        .invite-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 14px;
+            border-bottom: 1px solid #f1f3f4;
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
         }
 
-        #loading, #challenge, #result, #error {
-            display: none;
+        .invite-row:last-child { border-bottom: none; }
+        .invite-row.revealed { opacity: 1; transform: translateX(0); }
+
+        .invite-row-icon { font-size: 17px; flex-shrink: 0; width: 22px; text-align: center; }
+        .invite-row-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: #aaa; margin-bottom: 1px; font-weight: 500; }
+        .invite-row-value { font-size: 14px; font-weight: 600; color: var(--text); }
+
+        .invite-footer-note {
+            margin-top: 16px;
+            font-size: 13px;
+            color: var(--pink);
+            font-style: italic;
+            opacity: 0;
+            transition: opacity 0.5s ease 0.1s;
         }
 
+        .invite-footer-note.revealed { opacity: 1; }
 
-        #error {
-            color: #d93025;
-            margin-top: 15px;
-            font-size: 14px;
-            padding: 10px;
-            background: #fce8e6;
-            border-radius: 4px;
+        /* ── Animations ── */
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes popIn {
+            0%   { transform: scale(0); opacity: 0; }
+            70%  { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
         }
 
-        .spinner {
-            margin: 20px auto;
-            width: 30px;
-            height: 30px;
-            border: 4px solid #ddd;
-            border-top: 4px solid #4285f4;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
+        .fade-up { animation: fadeSlideUp 0.28s ease both; }
 
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-top: 15px;
-        }
-
-        .grid img {
-            width: 100%;
-            border-radius: 4px;
-            cursor: pointer;
-            border: 3px solid transparent;
-        }
-
-        .grid img.selected {
-            border-color: #4285f4;
-        }
-
-        button {
-            margin-top: 15px;
-            padding: 10px 16px;
-            border: none;
-            background: #4285f4;
-            color: #fff;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .heart {
-            font-size: 40px;
-            margin-bottom: 10px;
+        .rc-logo-image {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+            flex-shrink: 0;
         }
     </style>
 </head>
 <body>
 
-<div class="intro" id="intro">
-    <h1>Saugumo patikra</h1>
-    <p>Norėdami tęsti, turime patvirtinti, kad esate žmogus, o ne automatinė programa. Prašome užpildyti žemiau pateiktą saugumo patikrą.</p>
+<!-- Gate -->
+<div class="invite-gate" id="inviteGate">
+    <div class="invite-gate-badge">Privatus kvietimas</div>
+    <h1>Atėjo naujas kvietimas tau</h1>
+    <p>Informacija paslėpta dėl privatumo. Patvirtink tapatybę, kad galėtum peržiūrėti kvietimą.</p>
+    <button type="button" class="invite-open-btn" id="openInviteBtn">Peržiūrėti kvietimą</button>
 </div>
 
-<div class="card" id="step1">
-    <div class="recaptcha" id="recaptcha">
-        <img src="photos/recaptcha-logo.png" alt="reCAPTCHA" class="recaptcha-logo">
-        <input type="checkbox">
-        <span class="recaptcha-text">Aš ne robotas</span>
+<!-- Captcha flow -->
+<div id="captchaFlow">
+
+    <!-- STEP 1: checkbox -->
+    <div class="rc-widget fade-up" id="step1">
+        <div class="rc-checkbox-inner" id="checkboxInner">
+            <div class="rc-spinner"></div>
+            <svg class="check-svg" width="16" height="13" viewBox="0 0 16 13" fill="none">
+                <path d="M1.5 6.5L6 11L14.5 1.5" stroke="#4caf50" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+        <span class="rc-label">Aš ne robotas</span>
+        <div class="rc-logo">
+            <img src="new-img/recaptcha-logo.png" alt="reCAPTCHA" class="rc-logo-image">
+            <div class="rc-logo-text">reCAPTCHA<br>Privatumas · Sąlygos</div>
+        </div>
     </div>
-    <div class="small">Apsaugota reCAPTCHA</div>
-</div>
 
-<div class="card" id="loading">
-    <div class="spinner"></div>
-    <p>Tikrinama žmogiškumas…</p>
-</div>
+    <!-- CHALLENGE -->
+    <div class="rc-challenge fade-up" id="challenge">
+        <div class="rc-challenge-header">
+            <p id="challengeTitle"><strong>Pasirink visas nuotraukas, kuriose yra tavo meilė</strong></p>
+        </div>
 
-<div class="card" id="challenge">
-    <h3>Pasirinkite visas nuotraukas, kuriose yra<br><strong>mano vyras</strong></h3>
-    <div class="grid">
-        <img src="photos/me1.jpeg">
-        <img src="photos/me2.jpeg">
-        <img src="photos/me3.jpeg">
-        <img src="photos/me4.jpeg">
-        <img src="photos/me1.jpeg">
-        <img src="photos/me2.jpeg">
+        <div style="position:relative;">
+            <div class="rc-image-grid" id="imageGrid"></div>
+            <!-- Verifying overlay -->
+            <div class="rc-verifying-overlay" id="verifyingOverlay">
+                <div class="big-spinner"></div>
+                <span>Tikrinama...</span>
+            </div>
+        </div>
+
+        <div class="rc-round-label" id="roundLabel"></div>
+        <div class="rc-error" id="error">Tu turėtum žinoti kur yra tavo Meilė</div>
+
+        <div class="rc-challenge-footer">
+            <img src="new-img/recaptcha-logo.png" alt="reCAPTCHA" class="rc-logo-image">
+            <div class="rc-footer-brand">
+                <span>reCAPTCHA</span>
+                <span>Privatumas · Sąlygos</span>
+            </div>
+            <div class="rc-footer-actions">
+                <button class="rc-icon-btn" id="reloadBtn" title="Kita užduotis">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4C7.58 4 4 7.58 4 12s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                    </svg>
+                </button>
+                <button class="rc-icon-btn" title="Garso užduotis">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                    </svg>
+                </button>
+                <button class="rc-icon-btn" title="Pagalba">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
+                    </svg>
+                </button>
+            </div>
+            <button class="rc-verify-btn" id="verifyBtn">Patvirtinti</button>
+        </div>
+        <div class="rc-token" id="fakeToken"></div>
     </div>
-    <div id="error">Žmona turėtų žinoti kaip atrodo jos vyras</div>
-    <button id="verifyBtn">Patvirtinti</button>
-</div>
 
-<div class="card" id="result">
-    <div class="heart">❤️</div>
-    <h2>Patvirtinimas sėkmingas</h2>
-    <p>Jūs oficialiai pakviesta į<br><strong>Valentino dienos pasimatymą</strong></p>
-    <p>
-        🕯️ <strong>Šį šeštadienį</strong><br>
-        🕖 <strong>16:00</strong><br>
-        🍷 <strong>Aš + Tu</strong><br>
-        🍽️ <strong>Pepper Grey</strong>
-    </p>
-</div>
+    <!-- RESULT -->
+    <div class="rc-result fade-up" id="result">
+        <div class="rc-result-body">
+            <div class="rc-result-check">
+                <svg width="28" height="22" viewBox="0 0 28 22" fill="none">
+                    <path d="M2 11L10 19L26 2" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h2>Patvirtinimas sėkmingas</h2>
+            <p class="rc-subtitle">Sveikinu su gimtadieniu! <span class="heart-center">❤️</span></p>
+            <img src="new-img/ticket.jpeg" alt="Gimtadienio bilietas" class="ticket-image">
+<!--            <div class="invite-rows" id="inviteRows">-->
+<!--                <div class="invite-row">-->
+<!--                    <span class="invite-row-icon">🕯️</span>-->
+<!--                    <div><div class="invite-row-label">Data</div><div class="invite-row-value">Šį šeštadienį</div></div>-->
+<!--                </div>-->
+<!--                <div class="invite-row">-->
+<!--                    <span class="invite-row-icon">🕕</span>-->
+<!--                    <div><div class="invite-row-label">Laikas</div><div class="invite-row-value">16:00</div></div>-->
+<!--                </div>-->
+<!--                <div class="invite-row">-->
+<!--                    <span class="invite-row-icon">🍽️</span>-->
+<!--                    <div><div class="invite-row-label">Vieta</div><div class="invite-row-value">Pepper Grey</div></div>-->
+<!--                </div>-->
+<!--                <div class="invite-row">-->
+<!--                    <span class="invite-row-icon">🍷</span>-->
+<!--                    <div><div class="invite-row-label">Su kuo</div><div class="invite-row-value">Aš + Tu</div></div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--            <p class="invite-footer-note" id="footerNote">Laukiu tavęs su nekantrumu ♡</p>-->
+        </div>
+    </div>
+
+</div><!-- /#captchaFlow -->
 
 <script>
-    const recaptcha = document.getElementById('recaptcha');
-    const step1 = document.getElementById('step1');
-    const loading = document.getElementById('loading');
-    const challenge = document.getElementById('challenge');
-    const result = document.getElementById('result');
-    const intro = document.getElementById('intro');
+    const PHOTOS = [
+        'new-img/1.jpeg','new-img/2.jpeg','new-img/3.jpeg',
+        'new-img/4.jpeg','new-img/5.jpeg','new-img/6.jpeg',
+        'new-img/7.jpeg','new-img/8.jpeg','new-img/10.jpeg',
+    ];
 
-    recaptcha.addEventListener('click', () => {
-        step1.style.display = 'none';
-        intro.style.display = 'none';
-        loading.style.display = 'block';
+    const ROUNDS = [
+        { prompt: '<strong>Pasirink visas nuotraukas, kuriose yra tavo meilė</strong>', min: 3, max: 6, final: false },
+        { prompt: '<strong>Pasirink visas nuotraukas, kuriose yra tavo meilė</strong>', min: 3, max: 6, final: false },
+        { prompt: '<strong>Pasirink visas nuotraukas, kuriose yra tavo meilė</strong>', min: 9, max: 9, final: true  },
+    ];
+
+    let round = 0;
+    let failStreak = 0;
+    let blocked = false;
+
+    const checkmark = `<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4.5L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function buildGrid(photos) {
+        const grid = document.getElementById('imageGrid');
+        grid.innerHTML = '';
+        photos.forEach(src => {
+            const tile = document.createElement('div');
+            tile.className = 'rc-tile';
+            tile.innerHTML = `<img src="${src}" loading="lazy" alt=""><div class="tile-check">${checkmark}</div>`;
+            tile.addEventListener('click', () => {
+                tile.classList.toggle('selected');
+            });
+            grid.appendChild(tile);
+        });
+    }
+
+    function setRound(r) {
+        round = r;
+        const cfg = ROUNDS[r];
+        document.getElementById('challengeTitle').innerHTML = cfg.prompt;
+        document.getElementById('roundLabel').textContent =
+            '';
+        buildGrid(shuffle(PHOTOS));
+        document.getElementById('error').style.display = 'none';
+        document.getElementById('fakeToken').style.display = 'none';
+    }
+
+    function showRateLimit() {
+        blocked = true;
+        const ch = document.getElementById('challenge');
+        const overlay = document.getElementById('verifyingOverlay');
+        overlay.classList.remove('active');
+
+        // Temporarily replace challenge content with block message
+        const origHTML = ch.innerHTML;
+
+        const blockDiv = document.createElement('div');
+        blockDiv.style.cssText = 'padding:24px 20px;text-align:center;font-family:Arial,sans-serif;';
+        blockDiv.innerHTML = `
+            <div style="font-size:32px;margin-bottom:12px">🚫</div>
+            <div style="font-size:14px;font-weight:700;color:#c0392b;margin-bottom:6px">Per daug bandymų</div>
+            <div style="font-size:12px;color:#777;">Bandykite vėl po kelių sekundžių...</div>
+        `;
+        ch.innerHTML = '';
+        ch.appendChild(blockDiv);
+
+        let count = 4;
+        const interval = setInterval(() => {
+            count--;
+            if (count <= 0) {
+                clearInterval(interval);
+                ch.innerHTML = origHTML;
+                // Re-bind footer buttons after innerHTML reset
+                document.getElementById('reloadBtn').addEventListener('click', reloadGrid);
+                document.getElementById('verifyBtn').addEventListener('click', doVerify);
+                blocked = false;
+                failStreak = 0;
+                setRound(ROUNDS.length - 1); // go straight to final reveal round
+            }
+        }, 1000);
+    }
+
+    function reloadGrid() {
+        const btn = document.getElementById('reloadBtn');
+        btn.classList.add('spinning');
+        setTimeout(() => btn.classList.remove('spinning'), 500);
+        document.querySelectorAll('.rc-tile img').forEach(img => img.classList.add('shuffling'));
+        setTimeout(() => {
+            buildGrid(shuffle(PHOTOS));
+        }, 160);
+    }
+
+    function doVerify() {
+        if (blocked) return;
+        const selected = document.querySelectorAll('.rc-tile.selected').length;
+        const cfg = ROUNDS[round];
+
+        const overlay = document.getElementById('verifyingOverlay');
+        overlay.classList.add('active');
 
         setTimeout(() => {
-            loading.style.display = 'none';
-            challenge.style.display = 'block';
-        }, 1500);
+            overlay.classList.remove('active');
+
+            const pass = cfg.final
+                ? selected === cfg.min
+                : selected >= cfg.min && selected <= cfg.max;
+
+            if (!pass) {
+                failStreak++;
+                document.getElementById('error').style.display = 'block';
+
+                if (failStreak >= 2 && round < ROUNDS.length - 1) {
+                    showRateLimit();
+                    return;
+                }
+
+                // Advance round if not final
+                if (round < ROUNDS.length - 1) {
+                    setTimeout(() => {
+                        setRound(round + 1);
+                    }, 600);
+                } else {
+                    // Stay on final round, show error
+                    buildGrid(shuffle(PHOTOS));
+                }
+            } else {
+                if (round < ROUNDS.length - 1) {
+                    // Move to next round
+                    setTimeout(() => setRound(round + 1), 200);
+                } else {
+                    // SUCCESS
+                    showResult();
+                }
+            }
+        }, 1600);
+    }
+
+    function showResult() {
+        // Show fake token briefly
+        const tokenEl = document.getElementById('fakeToken');
+        tokenEl.style.display = 'block';
+        tokenEl.textContent = '03AFY_b8' + Math.random().toString(36).slice(2,18).toUpperCase() + 'xQzL9V' + Math.random().toString(36).slice(2,10);
+
+        setTimeout(() => {
+            // Hide gate + challenge
+            document.getElementById('inviteGate').classList.add('hiding');
+            document.getElementById('challenge').style.display = 'none';
+            document.getElementById('step1').style.display = 'none';
+
+            const res = document.getElementById('result');
+            res.style.display = 'block';
+            res.classList.add('fade-up');
+
+            // Stagger reveal invite rows
+            const rows = document.querySelectorAll('.invite-row');
+            rows.forEach((row, i) => {
+                setTimeout(() => row.classList.add('revealed'), 200 + i * 130);
+            });
+
+            // Footer note
+            setTimeout(() => {
+                document.getElementById('footerNote').classList.add('revealed');
+            }, 200 + rows.length * 130 + 150);
+        }, 700);
+    }
+
+    // ── INIT ──
+
+    let captchaOpened = false;
+
+    document.getElementById('openInviteBtn').addEventListener('click', () => {
+        if (captchaOpened) return;
+        captchaOpened = true;
+
+        const btn = document.getElementById('openInviteBtn');
+        btn.disabled = true;
+        btn.textContent = 'Patvirtink žemiau ↓';
+
+        const flow = document.getElementById('captchaFlow');
+        flow.classList.add('is-visible');
+        setRound(ROUNDS.length - 1);
+
+        // Scroll to captcha smoothly
+        setTimeout(() => flow.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
     });
 
-    document.querySelectorAll('.grid img').forEach(img => {
-        img.addEventListener('click', () => {
-            img.classList.toggle('selected');
-        });
+    // Step 1 → challenge
+    document.getElementById('step1').addEventListener('click', () => {
+        const cb = document.getElementById('checkboxInner');
+        cb.classList.add('loading');
+        setTimeout(() => {
+            cb.classList.remove('loading');
+            cb.classList.add('checked');
+            setTimeout(() => {
+                document.getElementById('step1').style.display = 'none';
+                const ch = document.getElementById('challenge');
+                ch.style.display = 'block';
+                ch.classList.add('fade-up');
+            }, 300);
+        }, 1400);
     });
 
-    document.getElementById('verifyBtn').addEventListener('click', () => {
-        const images = document.querySelectorAll('.grid img');
-        const selectedImages = document.querySelectorAll('.grid img.selected');
-        
-        if (selectedImages.length !== images.length) {
-            document.getElementById('error').style.display = 'block';
-        } else {
-            document.getElementById('error').style.display = 'none';
-            challenge.style.display = 'none';
-            intro.style.display = 'none';
-            result.style.display = 'block';
-        }
-    });
+    document.getElementById('reloadBtn').addEventListener('click', reloadGrid);
+    document.getElementById('verifyBtn').addEventListener('click', doVerify);
 </script>
-
 </body>
 </html>
